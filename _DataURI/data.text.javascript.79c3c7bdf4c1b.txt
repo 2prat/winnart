@@ -1,0 +1,101 @@
+ 
+    // Call geo-location JSONP service 
+    var jsonp = document.createElement( 'script');
+    jsonp.setAttribute( 'src', 'https://geolocation.onetrust.com/cookieconsentpub/v1/geo/location/geofeed');
+    document.head.appendChild(jsonp);
+
+    let personaAdClient = undefined;
+
+    const insertAdScripts = async function () {
+        // await insertSingleAdScript('head', '//dsh7ky7308k4b.cloudfront.net/publishers/cryptobriefingcom.min.js');
+        // await insertSingleAdScript('head', '//btloader.com/tag?o=5184339635601408&upapi=true');
+        // await insertSingleAdScript('body', 'https://appsha-prm.ctengine.io/js/script.js?wkey=t0hKKoLxBN');
+        // await insertSingleAdScript('head', 'https://cdn.jsdelivr.net/npm/@personaxyz/ad-sdk-programmatic@0.0.3');
+
+        // if (typeof PersonaAdSDK !== 'undefined') {
+        //     const personaConfig = {
+        //         apiKey: "persona-pub-5rFs09S0iTjaI5mHT6MTOSobSfJJBkuGAGqZZGhuNWugqwINYIa9gXjF8sJnA59Er7yVc5ffuThDP4B76fCtGYx9LoZhK8FQ6cWjWmpdNIEOlCX2mUxY",
+        //         environment: "production",
+        //     }
+        //     const sdk = new PersonaAdSDK.PersonaAdSDK(personaConfig);
+        //     personaAdClient = sdk.getClient();
+        // }
+    };
+
+    const insertSingleAdScript = function (appendTo, url) {
+        return new Promise(function (resolve, reject) {
+            const element = document.createElement('script');
+            const script = document.getElementsByTagName('script')[0];
+            element.async = true;
+            element.type = 'text/javascript';
+            element.src = url;
+
+            // Resolve the promise when the script is loaded
+            element.onload = function() {
+                resolve(true);
+            };
+
+            // Reject the promise on an error
+            element.onerror = function() {
+                reject('Script load error');
+            };
+
+            const target = document.getElementsByTagName(appendTo)[0];
+            if (!target) {
+                reject(`Cannot find element to append to: ${appendTo}`);
+                return;
+            }
+            
+            target.appendChild(element);
+        });
+    };
+
+    window.geofeed = function (options) {
+        var continent = options.continent.toString();
+        var country = options.country.toString();
+
+        if (continent == 'EU') {
+            var state = options.state.toString();
+            // console.log('In EU Country')
+            var gdprInsertAds = (function () {
+                // Run this in an interval (every 0.1s) just in case we are still waiting for consent 
+                var cnt = 0;
+                var consentSetInterval = setInterval(function () {
+                    cnt += 1;
+                    // Bail if we have not gotten a consent response after 60 seconds. 
+                    if (cnt === 600) clearInterval(consentSetInterval);
+                    if (typeof window.__tcfapi !== 'undefined') {
+                        // Check if window.__tcfapi has been set
+                        clearInterval(consentSetInterval);
+                        window.__tcfapi('addEventListener', 2, function (tcData, listenerSuccess) {
+                            if (listenerSuccess) {
+                                if (tcData.eventStatus === 'tcloaded' || tcData.eventStatus === 'useractioncomplete') {
+                                    if (!tcData.gdprApplies) {
+                                        insertAdScripts();
+                                        // console.log("No GDPR");
+                                    } else {
+                                        // GDPR DOES APPLY // Purpose 1 refers to the storage and/or access of information on a device. 
+                                        var hasDeviceStorageAndAccessConsent = tcData.purpose.consents[1] || false;
+                                        // Google Requires Consent for Purpose 1 
+                                        if (hasDeviceStorageAndAccessConsent) {
+                                            // GLOBAL VENDOR LIST - https://iabeurope.eu/vendor-list-tcf-v2-0/ 
+                                            // CHECK FOR GOOGLE ADVERTISING PRODUCTS CONSENT. (IAB Vendor ID 755) 
+                                            var hasGoogleAdvertisingProductsConsent = tcData.vendor.consents[755] || false;
+                                            // Check if the user gave Google Advertising Products consent (iab vendor 755) 
+                                            if (hasGoogleAdvertisingProductsConsent) {
+                                                insertAdScripts();
+                                                // console.log("GDPR Consent")
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                    cnt++;
+                }, 100);
+            })();
+        } else {
+            insertAdScripts();
+        }
+    };

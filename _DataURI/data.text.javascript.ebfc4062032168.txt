@@ -1,0 +1,9 @@
+
+    window.sevioads = window.sevioads || [];
+    var sevioads_preferences = [];
+    sevioads_preferences[0] = {};
+    sevioads_preferences[0].zone = "e895191b-6d01-4021-992d-173ebfdf2d63";
+    sevioads_preferences[0].adType = "banner";
+    sevioads_preferences[0].inventoryId = "c5700508-581b-472c-8fdd-a931cdbfc8e1";
+    sevioads_preferences[0].accountId = "1e47efc1-ec2d-4fca-a8b9-354e249e5095";
+    sevioads.push(sevioads_preferences);
